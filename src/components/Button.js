@@ -1,7 +1,7 @@
 import React from 'react';
-
-const isSearched = searchTerm => item =>
-  item.title.toLowerCase().includes(searchTerm.toLowerCase());
+// 
+// const isSearched = searchTerm => item =>
+//   item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 const Button = ({ children, onClick, className='' }) =>
   <div>

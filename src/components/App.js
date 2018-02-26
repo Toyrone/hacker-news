@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import logo from '../logo.svg';
+// import logo from '../logo.svg';
 import Search from './Search';
 import Table from './Table';
 import '../App.css';
@@ -12,24 +12,24 @@ const PARAM_SEARCH = 'query=';
 
 const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
 
-const list = [
-  {
-    title: 'React',
-    url: 'https://facebook.github.io/react/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  }
-];
+// const list = [
+//   {
+//     title: 'React',
+//     url: 'https://facebook.github.io/react/',
+//     author: 'Jordan Walke',
+//     num_comments: 3,
+//     points: 4,
+//     objectID: 0,
+//   },
+//   {
+//     title: 'Redux',
+//     url: 'https://github.com/reactjs/redux',
+//     author: 'Dan Abramov, Andrew Clark',
+//     num_comments: 2,
+//     points: 5,
+//     objectID: 1,
+//   }
+// ];
 
 
 class App extends Component {
@@ -53,7 +53,7 @@ class App extends Component {
   }
   
   fetchSearchTopStories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    fetch(url)
       .then(data => data.json())
       .then(result => this.setSearchTopStories(result))
       .catch(e => e);
@@ -62,8 +62,10 @@ class App extends Component {
   
   
   onDismiss(id) {
-    const updatedList = this.state.list.filter( item => item.objectID !== id);
-    this.setState({ list: updatedList});
+    const updatedHits = this.state.result.hits.filter( item => item.objectID !== id);
+    this.setState({ 
+      result: Object.assign({}, this.state.result, {hits: updatedHits})
+    });
 
     // Alt: 1
     // const isNotId = item => item.objectID !== id;
