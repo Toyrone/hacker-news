@@ -10,7 +10,7 @@ const Button = ({ children, onClick, className='' }) =>
       type="button"
       className={className}
     >
-      Dismiss
+      {children}
     </button>
   </div>
 

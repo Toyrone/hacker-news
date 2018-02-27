@@ -2,13 +2,17 @@ import React, { Component } from 'react';
 // import logo from '../logo.svg';
 import Search from './Search';
 import Table from './Table';
+import Button from './Button';
 import '../App.css';
 
 const DEFAULT_QUERY = 'twitter';
+const DEFAULT_HPP = '100';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
 // const list = [
 //   {
@@ -36,8 +40,10 @@ class App extends Component {
 
     // Initial state
     this.state = {
-      result: null,
+      results: null,
       searchTerm: DEFAULT_QUERY,
+      searchKey: '',
+      error: null,
     };
 
     this.onDismiss = this.onDismiss.bind(this);
@@ -45,31 +51,63 @@ class App extends Component {
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
+    this.searchForTopStories = this.searchForTopStories.bind(this);
+  }
+  
+  searchForTopStories(searchTerm) {
+    return !this.state.results[searchTerm];
   }
   
   setSearchTopStories(result) {
-    this.setState({ result })
+    const { hits, page } = result;
+    const { searchKey, results } = this.state;
+    
+    const oldHits = results && results[searchKey] ? this.state.results[searchKey].hits : [];
+    // const oldHits = page !== 0 ? this.state.result.hits : [];
+    
+    const updatedHits = [ ...oldHits, ...hits ];
+    
+    this.setState({ 
+      // result: {hits: updatedHits, page}
+      results: { 
+        ...results, 
+        [searchKey]:{ updatedHits, page }
+      }
+    });
   }
   
-  fetchSearchTopStories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopStories(searchTerm, page = 0) {
+    const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`;
+    fetch(url)
       .then(data => data.json())
       .then(result => {
-        this.setSearchTopStories(result)
+        this.setSearchTopStories(result);
+        // console.table(result);
       })
-      .catch(e => e);
+      .catch(e => this.setState({ error: e }));
   }
   
   onSearchSubmit(e) {
     const { searchTerm } = this.state;
-    this.fetchSearchTopStories(searchTerm);
+    this.setState({ searchKey: searchTerm });
+    
+    if (this.searchForTopStories(searchTerm)) {  
+      this.fetchSearchTopStories(searchTerm);
+    }
+    
     e.preventDefault();
   }
   
   onDismiss(id) {
-    const updatedHits = this.state.result.hits.filter( item => item.objectID !== id);
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+    
+    const updatedHits = hits.filter( item => item.objectID !== id);
     this.setState({ 
-      result: { ...this.state.result, hits: updatedHits }
+      results: { 
+        ...results,
+        [searchKey]: { hits: updatedHits, page } 
+      }
     });
 
     // Alt: 1
@@ -89,15 +127,18 @@ class App extends Component {
   
   componentDidMount() {
     const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
     
   }
   
   render() {
-    const { searchTerm, result } = this.state;
-    // console.log(this.state);
+    const { searchTerm, results, searchKey, error } = this.state;
+    const page = (results && results[searchKey] && results[searchKey].page) || 0;
+    const list = (results && results[searchKey] && results[searchKey].hits) || [];
     
-    if (!result) { return null; }
+    if (!results) { return null; }
+    
     return (
       <div className="page">
         <div className="interactions">
@@ -109,13 +150,20 @@ class App extends Component {
             Search
           </Search>
         </div>
-        {result 
-          ? <Table
+        { error 
+          ? <div className="interactions">
+              <p>Oops! Something went wrong</p>;
+            </div>
+          : <Table
+              list={list}
               onDismiss={this.onDismiss}
-              list={result.hits}
-            />
-        : null}
-
+            /> 
+        }
+        <div className="interactions">
+          <Button onClick={() => this.fetchSearchTopStories(searchKey, page+1)}>
+            More
+          </Button>
+        </div>
       </div>
     );
   }
