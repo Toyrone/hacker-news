@@ -4,13 +4,11 @@ import Search from './Search';
 import Table from './Table';
 import '../App.css';
 
-const DEFAULT_QUERY = 'redux';
+const DEFAULT_QUERY = 'twitter';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
 
 // const list = [
 //   {
@@ -44,6 +42,7 @@ class App extends Component {
 
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
   }
@@ -53,23 +52,29 @@ class App extends Component {
   }
   
   fetchSearchTopStories(searchTerm) {
-    fetch(url)
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
       .then(data => data.json())
-      .then(result => this.setSearchTopStories(result))
+      .then(result => {
+        this.setSearchTopStories(result)
+      })
       .catch(e => e);
   }
   
-  
+  onSearchSubmit(e) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+    e.preventDefault();
+  }
   
   onDismiss(id) {
     const updatedHits = this.state.result.hits.filter( item => item.objectID !== id);
     this.setState({ 
-      result: Object.assign({}, this.state.result, {hits: updatedHits})
+      result: { ...this.state.result, hits: updatedHits }
     });
 
     // Alt: 1
     // const isNotId = item => item.objectID !== id;
-    // const updatedList = this.state.list.filter(isNotId);
+    // const updatedHits = this.state.result.hits.filter(isNotId);
 
     // Alt: 2
     // const updatedList = this.state.list.filter( item => (
@@ -79,6 +84,7 @@ class App extends Component {
 
   onSearchChange(e) {
     this.setState({ searchTerm: e.target.value})
+    // console.log(e.target.value);
   }
   
   componentDidMount() {
@@ -98,15 +104,17 @@ class App extends Component {
           <Search
             value={searchTerm}
             onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
           >
             Search
           </Search>
         </div>
-        <Table
-          searchTerm={searchTerm}
-          onDismiss={this.onDismiss}
-          list={result.hits}
-        />
+        {result 
+          ? <Table
+              onDismiss={this.onDismiss}
+              list={result.hits}
+            />
+        : null}
 
       </div>
     );
