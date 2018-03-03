@@ -1,5 +1,6 @@
 import React from 'react';
-// 
+import Loading from './Loading';
+//
 // const isSearched = searchTerm => item =>
 //   item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -14,4 +15,11 @@ const Button = ({ children, onClick, className='' }) =>
     </button>
   </div>
 
-export default Button;
+const withLoading = (Component) => ({isLoading, ...rest}) =>
+  isLoading
+    ? <Loading />
+    : <Component {...rest} />
+
+const ButtonWithLoading = withLoading(Button);
+
+export default ButtonWithLoading;
