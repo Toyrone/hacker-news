@@ -15,6 +15,7 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
 
+
 // const list = [
 //   {
 //     title: 'React',
@@ -46,6 +47,8 @@ class App extends Component {
       searchKey: '',
       error: null,
       isLoading: false,
+      sortKey: 'NONE',
+      isSortReverse: false
     };
 
     this.onDismiss = this.onDismiss.bind(this);
@@ -54,6 +57,7 @@ class App extends Component {
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.searchForTopStories = this.searchForTopStories.bind(this);
+    this.onSort = this.onSort.bind(this);
   }
 
   searchForTopStories(searchTerm) {
@@ -90,6 +94,11 @@ class App extends Component {
         // console.table(result);
       })
       .catch(e => this.setState({ error: e }));
+  }
+
+  onSort(sortKey) {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({ isSortReverse, sortKey });
   }
 
   onSearchSubmit(e) {
@@ -138,7 +147,7 @@ class App extends Component {
   }
 
   render() {
-    const { searchTerm, results, searchKey, error, isLoading } = this.state;
+    const { searchTerm, results, searchKey, error, isLoading, sortKey, isSortReverse } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
     console.log(list);
@@ -162,6 +171,9 @@ class App extends Component {
           : <Table
               list={list}
               onDismiss={this.onDismiss}
+              sortKey={sortKey}
+              onSort={this.onSort}
+              isSortReverse={isSortReverse}
             />
         }
         <div className="interactions">
