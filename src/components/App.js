@@ -34,7 +34,21 @@ const PARAM_HPP = 'hitsPerPage=';
 //     objectID: 1,
 //   }
 // ];
+const updateSearchTopStoriesState = (hits, page) => (prevState) => {
+  const { searchKey, results } = prevState;
 
+  const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+
+  const updatedHits = [ ...oldHits, ...hits ];
+
+  return {
+    results: {
+      ...results,
+      [searchKey]:{ hits: updatedHits, page }
+    },
+    isLoading: false,
+  };
+}
 
 class App extends Component {
   constructor(props) {
@@ -47,8 +61,6 @@ class App extends Component {
       searchKey: '',
       error: null,
       isLoading: false,
-      sortKey: 'NONE',
-      isSortReverse: false
     };
 
     this.onDismiss = this.onDismiss.bind(this);
@@ -57,7 +69,7 @@ class App extends Component {
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.searchForTopStories = this.searchForTopStories.bind(this);
-    this.onSort = this.onSort.bind(this);
+
   }
 
   searchForTopStories(searchTerm) {
@@ -66,20 +78,8 @@ class App extends Component {
 
   setSearchTopStories(result) {
     const { hits, page } = result;
-    const { searchKey, results } = this.state;
-
-    const oldHits = results && results[searchKey] ? this.state.results[searchKey].hits : [];
     // const oldHits = page !== 0 ? this.state.result.hits : [];
-
-    const updatedHits = [ ...oldHits, ...hits ];
-
-    this.setState({
-      // result: {hits: updatedHits, page}
-      results: {
-        ...results,
-        [searchKey]:{ hits: updatedHits, page }
-      },
-      isLoading: false,
+    this.setState(updateSearchTopStoriesState(hits, page));      // result: {hits: updatedHits, page}
     });
   }
 
@@ -96,10 +96,7 @@ class App extends Component {
       .catch(e => this.setState({ error: e }));
   }
 
-  onSort(sortKey) {
-    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-    this.setState({ isSortReverse, sortKey });
-  }
+
 
   onSearchSubmit(e) {
     const { searchTerm } = this.state;
@@ -143,7 +140,6 @@ class App extends Component {
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
-
   }
 
   render() {
@@ -171,9 +167,6 @@ class App extends Component {
           : <Table
               list={list}
               onDismiss={this.onDismiss}
-              sortKey={sortKey}
-              onSort={this.onSort}
-              isSortReverse={isSortReverse}
             />
         }
         <div className="interactions">
